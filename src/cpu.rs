@@ -59,8 +59,12 @@ impl Cpu {
                     IFunct::Addi => {
                         self[rd] = rs1.wrapping_add_signed(imm_i32.into());
                     }
-                    IFunct::Slti => todo!(),
-                    IFunct::Sltiu => todo!(),
+                    IFunct::Slti => {
+                        self[rd] = u64::from((rs1 as i64) < i64::from(imm_i32));
+                    }
+                    IFunct::Sltiu => {
+                        self[rd] = u64::from(rs1 < imm_i32.sign_extend());
+                    }
                     IFunct::Xori => self[rd] = rs1 ^ imm_i32.sign_extend(),
                     IFunct::Ori => self[rd] = rs1 | imm_i32.sign_extend(),
                     IFunct::Andi => self[rd] = rs1 & imm_i32.sign_extend(),
