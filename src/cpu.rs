@@ -52,31 +52,53 @@ impl Cpu {
                 rs1,
                 funct,
                 rd,
-            } => match funct {
-                IFunct::Addi => {
-                    self[rd] = self[rs1]
-                        .wrapping_add_signed(sign_extend_12bit(imm).into());
+            } => {
+                let imm_i32 = sign_extend_12bit(imm);
+                let rs1 = self[rs1];
+                match funct {
+                    IFunct::Addi => {
+                        self[rd] = rs1.wrapping_add_signed(imm_i32.into());
+                    }
+                    IFunct::Slti => todo!(),
+                    IFunct::Sltiu => todo!(),
+                    IFunct::Xori => self[rd] = rs1 ^ (imm_i32 as i64 as u64),
+                    IFunct::Ori => self[rd] = rs1 | (imm_i32 as i64 as u64),
+                    IFunct::Andi => self[rd] = rs1 & (imm_i32 as i64 as u64),
+                    IFunct::Slli => todo!(),
+                    IFunct::Srli => todo!(),
+                    IFunct::Srai => todo!(),
+                    IFunct::Lb => {
+                        self[rd] = unsafe {
+                            *(rs1.wrapping_add_signed(imm_i32 as i64)
+                                as *const i8)
+                        } as i64 as u64;
+                    }
+                    IFunct::Lh => {
+                        self[rd] = unsafe {
+                            *(rs1.wrapping_add_signed(imm_i32 as i64)
+                                as *const i16)
+                        } as i64 as u64;
+                    }
+                    IFunct::Lw => {
+                        self[rd] = unsafe {
+                            *(rs1.wrapping_add_signed(imm_i32 as i64)
+                                as *const i32)
+                        } as i64 as u64;
+                    }
+                    IFunct::Lbu => {
+                        self[rd] = u64::from(unsafe {
+                            *(rs1.wrapping_add_signed(imm_i32 as i64)
+                                as *const u8)
+                        });
+                    }
+                    IFunct::Lhu => {
+                        self[rd] = u64::from(unsafe {
+                            *(rs1.wrapping_add_signed(imm_i32 as i64)
+                                as *const u16)
+                        });
+                    }
                 }
-                IFunct::Slti => todo!(),
-                IFunct::Sltiu => todo!(),
-                IFunct::Xori => todo!(),
-                IFunct::Ori => todo!(),
-                IFunct::Andi => todo!(),
-                IFunct::Slli => todo!(),
-                IFunct::Srli => todo!(),
-                IFunct::Srai => todo!(),
-                IFunct::Lb => todo!(),
-                IFunct::Lh => todo!(),
-                IFunct::Lw => {
-                    self[rd] = unsafe {
-                        *(self[rs1] as *const i32).wrapping_byte_offset(
-                            sign_extend_12bit(imm) as isize,
-                        )
-                    } as i64 as u64;
-                }
-                IFunct::Lbu => todo!(),
-                IFunct::Lhu => todo!(),
-            },
+            }
             Instruction::S {
                 imm,
                 rs2,

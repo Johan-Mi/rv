@@ -1,4 +1,4 @@
-#![feature(mixed_integer_ops, pointer_byte_offsets)]
+#![feature(mixed_integer_ops)]
 #![allow(clippy::unusual_byte_groupings)]
 #![deny(unsafe_op_in_unsafe_fn)]
 
