@@ -1,7 +1,7 @@
 use crate::{
     bits::{u32_sms, SignExtend},
     error::Result,
-    instruction::{IFunct, Instruction, RegisterName, UOpcode},
+    instruction::{IFunct, Instruction, RFunct, RegisterName, UOpcode},
     Opts,
 };
 use std::ops::{Index, IndexMut};
@@ -46,7 +46,22 @@ impl Cpu {
                 rs2,
                 rs1,
                 rd,
-            } => todo!(),
+            } => {
+                let rs1 = self[rs1];
+                let rs2 = self[rs2];
+                self[rd] = match funct {
+                    RFunct::Add => (rs1 as i64).wrapping_add(rs2 as i64) as u64,
+                    RFunct::Sub => (rs1 as i64).wrapping_sub(rs2 as i64) as u64,
+                    RFunct::Sll => todo!(),
+                    RFunct::Slt => u64::from((rs1 as i64) < rs2 as i64),
+                    RFunct::Sltu => u64::from(rs1 < rs2),
+                    RFunct::Xor => rs1 ^ rs2,
+                    RFunct::Srl => todo!(),
+                    RFunct::Sra => todo!(),
+                    RFunct::Or => rs1 | rs2,
+                    RFunct::And => rs1 & rs2,
+                }
+            }
             Instruction::I {
                 imm,
                 rs1,
