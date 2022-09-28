@@ -1,5 +1,5 @@
 use crate::{
-    bits::u32_sms,
+    bits::{u32_sms, SignExtend},
     error::Result,
     instruction::{IFunct, Instruction, RegisterName, UOpcode},
     Opts,
@@ -61,9 +61,9 @@ impl Cpu {
                     }
                     IFunct::Slti => todo!(),
                     IFunct::Sltiu => todo!(),
-                    IFunct::Xori => self[rd] = rs1 ^ (i64::from(imm_i32) as u64),
-                    IFunct::Ori => self[rd] = rs1 | (i64::from(imm_i32) as u64),
-                    IFunct::Andi => self[rd] = rs1 & (i64::from(imm_i32) as u64),
+                    IFunct::Xori => self[rd] = rs1 ^ imm_i32.sign_extend(),
+                    IFunct::Ori => self[rd] = rs1 | imm_i32.sign_extend(),
+                    IFunct::Andi => self[rd] = rs1 & imm_i32.sign_extend(),
                     IFunct::Slli => todo!(),
                     IFunct::Srli => todo!(),
                     IFunct::Srai => todo!(),
@@ -113,10 +113,10 @@ impl Cpu {
                 funct,
             } => todo!(),
             Instruction::U { imm, rd, opcode } => match opcode {
-                UOpcode::Lui => self[rd] = i64::from(imm as i32) as u64,
+                UOpcode::Lui => self[rd] = imm.sign_extend(),
                 UOpcode::Auipc => {
                     self[rd] = (self.pc as u64)
-                        .wrapping_add_signed(i64::from(imm as i32))
+                        .wrapping_add_signed(imm.sign_extend())
                         .wrapping_sub(4);
                 }
             },
