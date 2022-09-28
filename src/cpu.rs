@@ -61,39 +61,39 @@ impl Cpu {
                     }
                     IFunct::Slti => todo!(),
                     IFunct::Sltiu => todo!(),
-                    IFunct::Xori => self[rd] = rs1 ^ (imm_i32 as i64 as u64),
-                    IFunct::Ori => self[rd] = rs1 | (imm_i32 as i64 as u64),
-                    IFunct::Andi => self[rd] = rs1 & (imm_i32 as i64 as u64),
+                    IFunct::Xori => self[rd] = rs1 ^ (i64::from(imm_i32) as u64),
+                    IFunct::Ori => self[rd] = rs1 | (i64::from(imm_i32) as u64),
+                    IFunct::Andi => self[rd] = rs1 & (i64::from(imm_i32) as u64),
                     IFunct::Slli => todo!(),
                     IFunct::Srli => todo!(),
                     IFunct::Srai => todo!(),
                     IFunct::Lb => {
-                        self[rd] = unsafe {
-                            *(rs1.wrapping_add_signed(imm_i32 as i64)
+                        self[rd] = i64::from(unsafe {
+                            *(rs1.wrapping_add_signed(i64::from(imm_i32))
                                 as *const i8)
-                        } as i64 as u64;
+                        }) as u64;
                     }
                     IFunct::Lh => {
-                        self[rd] = unsafe {
-                            *(rs1.wrapping_add_signed(imm_i32 as i64)
+                        self[rd] = i64::from(unsafe {
+                            *(rs1.wrapping_add_signed(i64::from(imm_i32))
                                 as *const i16)
-                        } as i64 as u64;
+                        }) as u64;
                     }
                     IFunct::Lw => {
-                        self[rd] = unsafe {
-                            *(rs1.wrapping_add_signed(imm_i32 as i64)
+                        self[rd] = i64::from(unsafe {
+                            *(rs1.wrapping_add_signed(i64::from(imm_i32))
                                 as *const i32)
-                        } as i64 as u64;
+                        }) as u64;
                     }
                     IFunct::Lbu => {
                         self[rd] = u64::from(unsafe {
-                            *(rs1.wrapping_add_signed(imm_i32 as i64)
+                            *(rs1.wrapping_add_signed(i64::from(imm_i32))
                                 as *const u8)
                         });
                     }
                     IFunct::Lhu => {
                         self[rd] = u64::from(unsafe {
-                            *(rs1.wrapping_add_signed(imm_i32 as i64)
+                            *(rs1.wrapping_add_signed(i64::from(imm_i32))
                                 as *const u16)
                         });
                     }
@@ -113,10 +113,10 @@ impl Cpu {
                 funct,
             } => todo!(),
             Instruction::U { imm, rd, opcode } => match opcode {
-                UOpcode::Lui => self[rd] = imm as i32 as i64 as u64,
+                UOpcode::Lui => self[rd] = i64::from(imm as i32) as u64,
                 UOpcode::Auipc => {
                     self[rd] = (self.pc as u64)
-                        .wrapping_add_signed(imm as i32 as i64)
+                        .wrapping_add_signed(i64::from(imm as i32))
                         .wrapping_sub(4);
                 }
             },
