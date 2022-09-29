@@ -32,11 +32,13 @@ impl Cpu {
     unsafe fn step(&mut self) -> Result<()> {
         let instruction = Instruction::try_from(unsafe { *self.pc })?;
         self.pc = self.pc.wrapping_add(1);
-        self.run_instruction(instruction);
+        unsafe {
+            self.run_instruction(instruction);
+        }
         Ok(())
     }
 
-    fn run_instruction(&mut self, instruction: Instruction) {
+    unsafe fn run_instruction(&mut self, instruction: Instruction) {
         if self.opts.verbose {
             eprintln!("Running: {instruction:?}");
         }
