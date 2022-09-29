@@ -52,12 +52,12 @@ impl Cpu {
                 self[rd] = match funct {
                     RFunct::Add => (rs1 as i64).wrapping_add(rs2 as i64) as u64,
                     RFunct::Sub => (rs1 as i64).wrapping_sub(rs2 as i64) as u64,
-                    RFunct::Sll => todo!(),
+                    RFunct::Sll => rs1.wrapping_shl(rs2 as u32),
                     RFunct::Slt => u64::from((rs1 as i64) < rs2 as i64),
                     RFunct::Sltu => u64::from(rs1 < rs2),
                     RFunct::Xor => rs1 ^ rs2,
-                    RFunct::Srl => todo!(),
-                    RFunct::Sra => todo!(),
+                    RFunct::Srl => rs1.wrapping_shr(rs2 as u32),
+                    RFunct::Sra => (rs1 as i64).wrapping_shr(rs2 as u32) as u64,
                     RFunct::Or => rs1 | rs2,
                     RFunct::And => rs1 & rs2,
                 }
