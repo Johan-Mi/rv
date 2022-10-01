@@ -34,10 +34,9 @@ pub enum Instruction {
         rd: RegisterName,
         opcode: UOpcode,
     },
-    J {
-        imm: u32,
+    Jal {
+        imm: i32,
         rd: RegisterName,
-        opcode: JOpcode,
     },
     Ecall,
 }
@@ -85,6 +84,15 @@ impl TryFrom<u32> for Instruction {
                     imm: word & (u32_mask(20) << 12),
                     rd: RegisterName::rd(word),
                     opcode: UOpcode::Auipc,
+                }),
+                0b_1101111 => Ok(Self::Jal {
+                    imm: (u32_sms(word, 31, 1, 31)
+                        | u32_sms(word, 12, 8, 23)
+                        | u32_sms(word, 20, 1, 22)
+                        | u32_sms(word, 21, 10, 12))
+                        as i32
+                        >> 11,
+                    rd: RegisterName::rd(word),
                 }),
                 _ => Err(Error::UnknownInstruction(word)),
             }

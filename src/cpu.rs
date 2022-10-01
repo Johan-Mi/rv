@@ -187,7 +187,15 @@ impl Cpu {
                         .wrapping_sub(4);
                 }
             },
-            Instruction::J { imm, rd, opcode } => todo!(),
+            Instruction::Jal { imm, rd } => {
+                self[rd] = self.pc as u64;
+                self.pc = self
+                    .pc
+                    .wrapping_sub(1)
+                    .cast::<u8>() // For single byte offsets
+                    .wrapping_offset(imm as isize)
+                    .cast();
+            }
             Instruction::Ecall => {
                 self.registers[9] = unsafe {
                     libc::syscall(
