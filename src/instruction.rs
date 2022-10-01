@@ -22,7 +22,6 @@ pub enum Instruction {
         rs2: RegisterName,
         rs1: RegisterName,
         funct: SFunct,
-        opcode: SOpcode,
     },
     B {
         imm: u16,
@@ -63,6 +62,13 @@ impl TryFrom<u32> for Instruction {
                     rs1: RegisterName::rs1(word),
                     funct: IFunct::try_from(word)?,
                     rd: RegisterName::rd(word),
+                }),
+                0b010_0011 => Ok(Self::S {
+                    imm: (u32_sms(word, 25, 7, 5) | u32_sms(word, 7, 5, 0))
+                        as u16,
+                    rs2: RegisterName::rs2(word),
+                    rs1: RegisterName::rs1(word),
+                    funct: SFunct::try_from(word)?,
                 }),
                 0b110_0011 => Ok(Self::B {
                     imm: todo!(),
@@ -167,7 +173,27 @@ impl TryFrom<u32> for IFunct {
 }
 
 #[derive(Debug)]
-pub enum SFunct {}
+pub enum SFunct {
+    Sb,
+    Sh,
+    Sw,
+    Sd,
+}
+
+impl TryFrom<u32> for SFunct {
+    type Error = Error;
+
+    fn try_from(word: u32) -> Result<Self, Self::Error> {
+        let raw_funct = u32_sms(word, 12, 3, 0);
+        match raw_funct {
+            0b000 => Ok(Self::Sb),
+            0b010 => Ok(Self::Sh),
+            0b100 => Ok(Self::Sw),
+            0b011 => Ok(Self::Sd),
+            _ => Err(Error::UnknownInstruction(word)),
+        }
+    }
+}
 
 #[derive(Debug)]
 pub enum BFunct {}

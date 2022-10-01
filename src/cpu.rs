@@ -1,25 +1,33 @@
 use crate::{
     bits::{u32_sms, SignExtend},
     error::Result,
-    instruction::{IFunct, Instruction, RFunct, RegisterName, UOpcode},
+    instruction::{IFunct, Instruction, RFunct, RegisterName, SFunct, UOpcode},
     Opts,
 };
 use std::ops::{Index, IndexMut};
+
+const STACK_SIZE: usize = 4096;
 
 pub struct Cpu {
     opts: Opts,
     zero: u64, // Never read from this
     registers: [u64; 31],
     pc: *const u32,
+    #[allow(dead_code)]
+    stack: Vec<u8>,
 }
 
 impl Cpu {
     pub fn new(opts: Opts, pc: *const u32) -> Self {
+        let stack = Vec::<u8>::with_capacity(STACK_SIZE);
+        let mut registers: [u64; 31] = Default::default();
+        registers[1] = stack.as_ptr().wrapping_add(STACK_SIZE) as u64;
         Self {
             opts,
             zero: 0,
-            registers: Default::default(),
+            registers,
             pc,
+            stack,
         }
     }
 
@@ -125,8 +133,25 @@ impl Cpu {
                 rs2,
                 rs1,
                 funct,
-                opcode,
-            } => todo!(),
+            } => {
+                let dest = self[rs1].wrapping_add_signed(i64::from(
+                    sign_extend_12bit(u32::from(imm)),
+                ));
+                match funct {
+                    SFunct::Sb => unsafe {
+                        *(dest as *mut u8) = self[rs2] as _;
+                    },
+                    SFunct::Sh => unsafe {
+                        *(dest as *mut u16) = self[rs2] as _;
+                    },
+                    SFunct::Sw => unsafe {
+                        *(dest as *mut u32) = self[rs2] as _;
+                    },
+                    SFunct::Sd => unsafe {
+                        *(dest as *mut u64) = self[rs2];
+                    },
+                }
+            }
             Instruction::B {
                 imm,
                 rs2,
