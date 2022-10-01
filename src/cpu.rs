@@ -1,7 +1,9 @@
 use crate::{
     bits::{u32_sms, SignExtend},
     error::Result,
-    instruction::{IFunct, Instruction, RFunct, RegisterName, SFunct, UOpcode},
+    instruction::{
+        BFunct, IFunct, Instruction, RFunct, RegisterName, SFunct, UOpcode,
+    },
     Opts,
 };
 use std::ops::{Index, IndexMut};
@@ -157,7 +159,26 @@ impl Cpu {
                 rs2,
                 rs1,
                 funct,
-            } => todo!(),
+            } => {
+                let rs1 = self[rs1];
+                let rs2 = self[rs2];
+                let branch_condition = match funct {
+                    BFunct::Beq => rs1 == rs2,
+                    BFunct::Bne => rs1 != rs2,
+                    BFunct::Blt => (rs1 as i64) < rs2 as i64,
+                    BFunct::Bge => rs1 as i64 >= rs2 as i64,
+                    BFunct::Bltu => rs1 < rs2,
+                    BFunct::Bgeu => rs1 >= rs2,
+                };
+                if branch_condition {
+                    self.pc = self
+                        .pc
+                        .wrapping_sub(1)
+                        .cast::<u8>() // For single byte offsets
+                        .wrapping_offset(isize::from(imm))
+                        .cast();
+                }
+            }
             Instruction::U { imm, rd, opcode } => match opcode {
                 UOpcode::Lui => self[rd] = imm.sign_extend(),
                 UOpcode::Auipc => {
