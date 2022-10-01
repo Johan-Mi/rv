@@ -56,7 +56,7 @@ impl TryFrom<u32> for Instruction {
                     rs1: RegisterName::rs1(word),
                     rd: RegisterName::rd(word),
                 }),
-                0b001_0011 | 0b000_0011 => Ok(Self::I {
+                0b001_0011 | 0b000_0011 | 0b110_0111 => Ok(Self::I {
                     imm: u32_sms(word, 20, 12, 0),
                     rs1: RegisterName::rs1(word),
                     funct: IFunct::try_from(word)?,
@@ -152,6 +152,7 @@ pub enum IFunct {
     Ld,
     Lbu,
     Lhu,
+    Jalr,
 }
 
 impl TryFrom<u32> for IFunct {
@@ -180,6 +181,10 @@ impl TryFrom<u32> for IFunct {
                 0b011 => Ok(Self::Ld),
                 0b100 => Ok(Self::Lbu),
                 0b101 => Ok(Self::Lhu),
+                _ => Err(Error::UnknownInstruction(word)),
+            },
+            0b110_0111 => match raw_funct {
+                000 => Ok(Self::Jalr),
                 _ => Err(Error::UnknownInstruction(word)),
             },
             _ => Err(Error::UnknownInstruction(word)),

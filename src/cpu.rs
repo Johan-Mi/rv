@@ -134,6 +134,11 @@ impl Cpu {
                                 as *const u16)
                         });
                     }
+                    IFunct::Jalr => {
+                        self[rd] = self.pc as u64;
+                        self.pc = rs1.wrapping_add_signed(i64::from(imm_i32))
+                            as *const u32;
+                    }
                 }
             }
             Instruction::S {
