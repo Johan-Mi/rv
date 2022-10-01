@@ -149,6 +149,7 @@ pub enum IFunct {
     Lb,
     Lh,
     Lw,
+    Ld,
     Lbu,
     Lhu,
 }
@@ -176,6 +177,7 @@ impl TryFrom<u32> for IFunct {
                 0b000 => Ok(Self::Lb),
                 0b001 => Ok(Self::Lh),
                 0b010 => Ok(Self::Lw),
+                0b011 => Ok(Self::Ld),
                 0b100 => Ok(Self::Lbu),
                 0b101 => Ok(Self::Lhu),
                 _ => Err(Error::UnknownInstruction(word)),

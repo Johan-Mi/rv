@@ -116,6 +116,12 @@ impl Cpu {
                                 as *const i32)
                         }) as u64;
                     }
+                    IFunct::Ld => {
+                        self[rd] = unsafe {
+                            *(rs1.wrapping_add_signed(i64::from(imm_i32))
+                                as *const u64)
+                        };
+                    }
                     IFunct::Lbu => {
                         self[rd] = u64::from(unsafe {
                             *(rs1.wrapping_add_signed(i64::from(imm_i32))
