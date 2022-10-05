@@ -14,13 +14,13 @@ pub struct Cpu {
     opts: Opts,
     zero: u64, // Never read from this
     registers: [u64; 31],
-    pc: *const u32,
+    pc: *const u16,
     #[allow(dead_code)]
     stack: Vec<u8>,
 }
 
 impl Cpu {
-    pub fn new(opts: Opts, pc: *const u32) -> Self {
+    pub fn new(opts: Opts, pc: *const u16) -> Self {
         let stack = Vec::<u8>::with_capacity(STACK_SIZE);
         let mut registers: [u64; 31] = Default::default();
         registers[1] = stack.as_ptr().wrapping_add(STACK_SIZE) as u64;
@@ -40,8 +40,11 @@ impl Cpu {
     }
 
     unsafe fn step(&mut self) -> Result<()> {
-        let instruction = Instruction::try_from(unsafe { *self.pc })?;
-        self.pc = self.pc.wrapping_add(1);
+        let low_half = unsafe { *self.pc };
+        let high_half = unsafe { *self.pc.wrapping_add(1) };
+        let raw_instruction = u32::from(high_half) << 16 | u32::from(low_half);
+        let instruction = Instruction::try_from(raw_instruction)?;
+        self.pc = self.pc.wrapping_add(2);
         unsafe {
             self.run_instruction(instruction);
         }
@@ -137,7 +140,7 @@ impl Cpu {
                     IFunct::Jalr => {
                         self[rd] = self.pc as u64;
                         self.pc = rs1.wrapping_add_signed(i64::from(imm_i32))
-                            as *const u32;
+                            as *const u16;
                     }
                 }
             }
@@ -184,7 +187,7 @@ impl Cpu {
                 if branch_condition {
                     self.pc = self
                         .pc
-                        .wrapping_sub(1)
+                        .wrapping_sub(2)
                         .cast::<u8>() // For single byte offsets
                         .wrapping_offset(isize::from(imm))
                         .cast();
@@ -202,7 +205,7 @@ impl Cpu {
                 self[rd] = self.pc as u64;
                 self.pc = self
                     .pc
-                    .wrapping_sub(1)
+                    .wrapping_sub(2)
                     .cast::<u8>() // For single byte offsets
                     .wrapping_offset(imm as isize)
                     .cast();
