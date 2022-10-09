@@ -105,6 +105,17 @@ impl TryFrom<u32> for Instruction {
     }
 }
 
+impl TryFrom<u16> for Instruction {
+    type Error = Result<NeedMoreBytes, Error>;
+
+    fn try_from(word: u16) -> Result<Self, Self::Error> {
+        match word & 0b11 {
+            0b11 => Err(Ok(NeedMoreBytes)),
+            _ => Err(Err(Error::UnknownCompressedInstruction(word))),
+        }
+    }
+}
+
 #[derive(Debug)]
 pub enum RFunct {
     Add,
@@ -281,3 +292,5 @@ pub enum UOpcode {
 
 #[derive(Debug)]
 pub enum JOpcode {}
+
+pub struct NeedMoreBytes;

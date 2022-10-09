@@ -2,7 +2,8 @@ use crate::{
     bits::{u32_sms, SignExtend},
     error::Result,
     instruction::{
-        BFunct, IFunct, Instruction, RFunct, RegisterName, SFunct, UOpcode,
+        BFunct, IFunct, Instruction, NeedMoreBytes, RFunct, RegisterName,
+        SFunct, UOpcode,
     },
     Opts,
 };
@@ -41,10 +42,20 @@ impl Cpu {
 
     unsafe fn step(&mut self) -> Result<()> {
         let low_half = unsafe { *self.pc };
-        let high_half = unsafe { *self.pc.wrapping_add(1) };
-        let raw_instruction = u32::from(high_half) << 16 | u32::from(low_half);
-        let instruction = Instruction::try_from(raw_instruction)?;
-        self.pc = self.pc.wrapping_add(2);
+        let instruction = match Instruction::try_from(low_half) {
+            Ok(instruction) => {
+                self.pc = self.pc.wrapping_add(1);
+                instruction
+            }
+            Err(Ok(NeedMoreBytes)) => {
+                let high_half = unsafe { *self.pc.wrapping_add(1) };
+                let raw_instruction =
+                    u32::from(high_half) << 16 | u32::from(low_half);
+                self.pc = self.pc.wrapping_add(2);
+                Instruction::try_from(raw_instruction)?
+            }
+            Err(Err(err)) => return Err(err),
+        };
         unsafe {
             self.run_instruction(instruction);
         }
