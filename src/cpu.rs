@@ -16,6 +16,7 @@ pub struct Cpu {
     zero: u64, // Never read from this
     registers: [u64; 31],
     pc: *const u16,
+    old_pc: *const u16,
     #[allow(dead_code)]
     stack: Vec<u8>,
 }
@@ -30,6 +31,7 @@ impl Cpu {
             zero: 0,
             registers,
             pc,
+            old_pc: pc,
             stack,
         }
     }
@@ -41,6 +43,7 @@ impl Cpu {
     }
 
     unsafe fn step(&mut self) -> Result<()> {
+        self.old_pc = self.pc;
         let low_half = unsafe { *self.pc };
         let instruction = match Instruction::try_from(low_half) {
             Ok(instruction) => {
@@ -197,8 +200,7 @@ impl Cpu {
                 };
                 if branch_condition {
                     self.pc = self
-                        .pc
-                        .wrapping_sub(2)
+                        .old_pc
                         .cast::<u8>() // For single byte offsets
                         .wrapping_offset(isize::from(imm))
                         .cast();
@@ -207,16 +209,14 @@ impl Cpu {
             Instruction::U { imm, rd, opcode } => match opcode {
                 UOpcode::Lui => self[rd] = imm.sign_extend(),
                 UOpcode::Auipc => {
-                    self[rd] = (self.pc as u64)
-                        .wrapping_add_signed(imm.sign_extend())
-                        .wrapping_sub(4);
+                    self[rd] = (self.old_pc as u64)
+                        .wrapping_add_signed(imm.sign_extend());
                 }
             },
             Instruction::Jal { imm, rd } => {
                 self[rd] = self.pc as u64;
                 self.pc = self
-                    .pc
-                    .wrapping_sub(2)
+                    .old_pc
                     .cast::<u8>() // For single byte offsets
                     .wrapping_offset(imm as isize)
                     .cast();

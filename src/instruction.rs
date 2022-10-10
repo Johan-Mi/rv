@@ -1,5 +1,5 @@
 use crate::{
-    bits::{u32_mask, u32_sms},
+    bits::{u16_sms, u32_mask, u32_sms, SignExtend},
     error::Error,
 };
 
@@ -109,11 +109,132 @@ impl TryFrom<u16> for Instruction {
     type Error = Result<NeedMoreBytes, Error>;
 
     fn try_from(word: u16) -> Result<Self, Self::Error> {
+        let unknown_instruction =
+            Err(Err(Error::UnknownCompressedInstruction(word)));
+
+        let funct3 = u16_sms(word, 13, 3, 0);
         match word & 0b11 {
             0b11 => Err(Ok(NeedMoreBytes)),
-            _ => Err(Err(Error::UnknownCompressedInstruction(word))),
+            0b00 => match funct3 {
+                0b000 => todo!("addi4spn"),
+                0b001 => todo!("fld"),
+                0b010 => todo!("lw"),
+                0b011 => todo!("ld"),
+                0b100 => unknown_instruction,
+                0b101 => todo!("fsd"),
+                0b110 => todo!("sw"),
+                0b111 => todo!("sd"),
+                _ => unreachable!(),
+            },
+            0b01 => match funct3 {
+                0b000 => {
+                    let reg = RegisterName::compressed_rd(word);
+                    Ok(Instruction::I {
+                        imm: compressed_6bit_imm(word),
+                        rs1: reg,
+                        funct: IFunct::Addi,
+                        rd: reg,
+                    })
+                }
+                0b001 => todo!("addiw"),
+                0b010 => Ok(Instruction::I {
+                    imm: compressed_6bit_imm(word),
+                    rs1: RegisterName::X0,
+                    funct: IFunct::Addi,
+                    rd: RegisterName::compressed_rd(word),
+                }),
+                0b011 => {
+                    if u16_sms(word, 7, 5, 0) == 2 {
+                        let high_imm: i32 = (u16_sms(word, 12, 1, 15)
+                            | u16_sms(word, 3, 2, 13)
+                            | u16_sms(word, 5, 1, 12)
+                            | u16_sms(word, 2, 1, 11)
+                            | u16_sms(word, 6, 1, 10))
+                        .sign_extend();
+                        Ok(Instruction::I {
+                            imm: (high_imm >> 6) as u32,
+                            rs1: RegisterName::X2,
+                            funct: IFunct::Addi,
+                            rd: RegisterName::X2,
+                        })
+                    } else {
+                        todo!("lui")
+                    }
+                }
+                0b100 => todo!("misc-alu"),
+                0b101 => Ok(Instruction::Jal {
+                    imm: SignExtend::<i32>::sign_extend(
+                        u16_sms(word, 12, 1, 15)
+                            | u16_sms(word, 8, 1, 14)
+                            | u16_sms(word, 10, 2, 12)
+                            | u16_sms(word, 6, 1, 11)
+                            | u16_sms(word, 7, 1, 10)
+                            | u16_sms(word, 2, 1, 9)
+                            | u16_sms(word, 11, 1, 8)
+                            | u16_sms(word, 3, 3, 5),
+                    ) >> 4,
+                    rd: RegisterName::X0,
+                }),
+                0b110 => todo!("beqz"),
+                0b111 => todo!("bnez"),
+                _ => unreachable!(),
+            },
+            0b10 => match funct3 {
+                0b000 => todo!("slli"),
+                0b001 => todo!("fldsp"),
+                0b010 => todo!("lwsp"),
+                0b011 => Ok(Instruction::I {
+                    imm: u32::from(
+                        u16_sms(word, 2, 3, 6)
+                            | u16_sms(word, 12, 1, 5)
+                            | u16_sms(word, 5, 2, 3),
+                    ),
+                    rs1: RegisterName::X2,
+                    funct: IFunct::Ld,
+                    rd: RegisterName::compressed_rd(word),
+                }),
+                0b100 => Ok({
+                    let rd = RegisterName::compressed_rd(word);
+                    let rs2 = RegisterName::compressed_rs2(word);
+                    if u16_sms(word, 12, 1, 0) == 0 {
+                        if rs2 == RegisterName::X0 {
+                            Instruction::I {
+                                imm: 0,
+                                rs1: rd,
+                                funct: IFunct::Jalr,
+                                rd: RegisterName::X0,
+                            }
+                        } else {
+                            Instruction::R {
+                                funct: RFunct::Add,
+                                rs2,
+                                rs1: RegisterName::X0,
+                                rd,
+                            }
+                        }
+                    } else {
+                        todo!("ebreak/jalr/add")
+                    }
+                }),
+                0b101 => todo!("fsdsp"),
+                0b110 => todo!("swsp"),
+                0b111 => Ok(Instruction::S {
+                    imm: u16_sms(word, 7, 3, 6) | u16_sms(word, 10, 3, 3),
+                    rs2: RegisterName::compressed_rs2(word),
+                    rs1: RegisterName::X2,
+                    funct: SFunct::Sd,
+                }),
+                _ => unreachable!(),
+            },
+            _ => unreachable!(),
         }
     }
+}
+
+fn compressed_6bit_imm(word: u16) -> u32 {
+    (SignExtend::<i32>::sign_extend(
+        u16_sms(word, 12, 1, 15) | u16_sms(word, 2, 5, 10),
+    ) >> 10) as u32
 }
 
 #[derive(Debug)]
@@ -258,10 +379,13 @@ impl TryFrom<u32> for BFunct {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct RegisterName(u8);
 
 impl RegisterName {
+    const X0: Self = Self(0);
+    const X2: Self = Self(2);
+
     const fn rd(word: u32) -> Self {
         Self(u32_sms(word, 7, 5, 0) as u8)
     }
@@ -272,6 +396,14 @@ impl RegisterName {
 
     const fn rs2(word: u32) -> Self {
         Self(u32_sms(word, 20, 5, 0) as u8)
+    }
+
+    const fn compressed_rd(word: u16) -> Self {
+        Self(u16_sms(word, 7, 5, 0) as u8)
+    }
+
+    const fn compressed_rs2(word: u16) -> Self {
+        Self(u16_sms(word, 2, 5, 0) as u8)
     }
 }
 
