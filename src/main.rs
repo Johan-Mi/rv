@@ -5,17 +5,18 @@ mod bits;
 mod cpu;
 mod error;
 mod instruction;
+mod load;
 
 use cpu::Cpu;
 use gumdrop::Options;
-use std::{fs::File, io::Read, path::PathBuf};
+use std::path::PathBuf;
 
 #[derive(Options)]
 pub struct Opts {
     /// Display this message
     help: bool,
 
-    /// Flat binary to execute
+    /// ELF or flat binary to execute
     #[options(free, required)]
     file: PathBuf,
 
@@ -26,15 +27,13 @@ pub struct Opts {
 fn main() {
     if let Err(err) = (|| {
         let opts = Opts::parse_args_default_or_exit();
-
-        let mut file = File::open(&opts.file)?;
-        let mut program_bytes = Vec::new();
-        file.read_to_end(&mut program_bytes)?;
-
-        let mut cpu = Cpu::new(opts, program_bytes.as_ptr().cast());
+        let (program_bytes, pc) = load::load_program(&opts.file)?;
+        let mut cpu = Cpu::new(opts, pc);
         unsafe {
             cpu.run()?;
         }
+        // Keep the program allocated while the CPU is running
+        drop(program_bytes);
 
         Ok::<(), Box<dyn std::error::Error>>(())
     })() {
