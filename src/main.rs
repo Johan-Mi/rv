@@ -6,6 +6,7 @@ mod cpu;
 mod error;
 mod instruction;
 mod load;
+mod register;
 
 use cpu::Cpu;
 use gumdrop::Options;

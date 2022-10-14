@@ -1,6 +1,7 @@
 use crate::{
     bits::{u16_sms, u32_mask, u32_sms, SignExtend},
     error::Error,
+    register::RegisterName,
 };
 
 #[derive(Debug)]
@@ -376,40 +377,6 @@ impl TryFrom<u32> for BFunct {
             0b111 => Ok(Self::Bgeu),
             _ => Err(Error::UnknownInstruction(word)),
         }
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct RegisterName(u8);
-
-impl RegisterName {
-    const X0: Self = Self(0);
-    const X2: Self = Self(2);
-
-    const fn rd(word: u32) -> Self {
-        Self(u32_sms(word, 7, 5, 0) as u8)
-    }
-
-    const fn rs1(word: u32) -> Self {
-        Self(u32_sms(word, 15, 5, 0) as u8)
-    }
-
-    const fn rs2(word: u32) -> Self {
-        Self(u32_sms(word, 20, 5, 0) as u8)
-    }
-
-    const fn compressed_rd(word: u16) -> Self {
-        Self(u16_sms(word, 7, 5, 0) as u8)
-    }
-
-    const fn compressed_rs2(word: u16) -> Self {
-        Self(u16_sms(word, 2, 5, 0) as u8)
-    }
-}
-
-impl From<RegisterName> for usize {
-    fn from(reg: RegisterName) -> Self {
-        reg.0.into()
     }
 }
 

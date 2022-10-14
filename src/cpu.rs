@@ -2,9 +2,9 @@ use crate::{
     bits::SignExtend,
     error::Result,
     instruction::{
-        BFunct, IFunct, Instruction, NeedMoreBytes, RFunct, RegisterName,
-        SFunct, UOpcode,
+        BFunct, IFunct, Instruction, NeedMoreBytes, RFunct, SFunct, UOpcode,
     },
+    register::RegisterName,
     Opts,
 };
 use std::ops::{Index, IndexMut};
