@@ -30,7 +30,7 @@ pub enum Instruction {
         funct: BFunct,
     },
     U {
-        imm: u32,
+        imm: i32,
         rd: RegisterName,
         opcode: UOpcode,
     },
@@ -81,12 +81,12 @@ impl TryFrom<u32> for Instruction {
                     funct: BFunct::try_from(word)?,
                 }),
                 0b001_0111 => Ok(Self::U {
-                    imm: word & (u32_mask(20) << 12),
+                    imm: (word & (u32_mask(20) << 12)) as i32,
                     rd: RegisterName::rd(word),
                     opcode: UOpcode::Auipc,
                 }),
                 0b011_0111 => Ok(Self::U {
-                    imm: word & (u32_mask(20) << 12),
+                    imm: (word & (u32_mask(20) << 12)) as i32,
                     rd: RegisterName::rd(word),
                     opcode: UOpcode::Lui,
                 }),

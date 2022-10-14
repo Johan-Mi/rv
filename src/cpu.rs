@@ -210,7 +210,7 @@ impl Cpu {
                 UOpcode::Lui => self[rd] = imm.sign_extend(),
                 UOpcode::Auipc => {
                     self[rd] = (self.old_pc as u64)
-                        .wrapping_add_signed(imm.sign_extend());
+                        .wrapping_add_signed(i64::from(imm));
                 }
             },
             Instruction::Jal { imm, rd } => {
