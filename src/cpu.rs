@@ -1,5 +1,5 @@
 use crate::{
-    bits::{u32_sms, SignExtend},
+    bits::SignExtend,
     error::Result,
     instruction::{
         BFunct, IFunct, Instruction, NeedMoreBytes, RFunct, RegisterName,
@@ -261,5 +261,5 @@ impl IndexMut<RegisterName> for Cpu {
 /// Interprets the low 12 bits of the operand as a signed integer and
 /// sign-extends it to fill 32 bits again.
 const fn sign_extend_12bit(imm: u32) -> i32 {
-    u32_sms(imm, 0, 12, 20) as i32 >> 20
+    (imm << 20) as i32 >> 20
 }
