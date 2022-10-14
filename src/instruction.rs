@@ -8,36 +8,36 @@ use crate::{
 pub enum Instruction {
     R {
         funct: RFunct,
+        rd: RegisterName,
         rs2: RegisterName,
         rs1: RegisterName,
-        rd: RegisterName,
     },
     I {
-        imm: u32,
-        rs1: RegisterName,
         funct: IFunct,
         rd: RegisterName,
+        rs1: RegisterName,
+        imm: u32,
     },
     S {
-        imm: u16,
+        funct: SFunct,
         rs2: RegisterName,
         rs1: RegisterName,
-        funct: SFunct,
+        imm: u16,
     },
     B {
-        imm: i16,
+        funct: BFunct,
         rs2: RegisterName,
         rs1: RegisterName,
-        funct: BFunct,
+        imm: i16,
     },
     U {
-        imm: i32,
-        rd: RegisterName,
         opcode: UOpcode,
+        rd: RegisterName,
+        imm: i32,
     },
     Jal {
-        imm: i32,
         rd: RegisterName,
+        imm: i32,
     },
     Ecall,
 }
