@@ -130,7 +130,7 @@ impl TryFrom<u16> for Instruction {
             0b01 => match funct3 {
                 0b000 => {
                     let reg = RegisterName::compressed_rd(word);
-                    Ok(Instruction::I {
+                    Ok(Self::I {
                         imm: compressed_6bit_imm(word),
                         rs1: reg,
                         funct: IFunct::Addi,
@@ -138,7 +138,7 @@ impl TryFrom<u16> for Instruction {
                     })
                 }
                 0b001 => todo!("addiw"),
-                0b010 => Ok(Instruction::I {
+                0b010 => Ok(Self::I {
                     imm: compressed_6bit_imm(word),
                     rs1: RegisterName::X0,
                     funct: IFunct::Addi,
@@ -152,7 +152,7 @@ impl TryFrom<u16> for Instruction {
                             | u16_sms(word, 2, 1, 11)
                             | u16_sms(word, 6, 1, 10))
                         .sign_extend();
-                        Ok(Instruction::I {
+                        Ok(Self::I {
                             imm: (high_imm >> 6) as u32,
                             rs1: RegisterName::X2,
                             funct: IFunct::Addi,
@@ -163,7 +163,7 @@ impl TryFrom<u16> for Instruction {
                     }
                 }
                 0b100 => todo!("misc-alu"),
-                0b101 => Ok(Instruction::Jal {
+                0b101 => Ok(Self::Jal {
                     imm: SignExtend::<i32>::sign_extend(
                         u16_sms(word, 12, 1, 15)
                             | u16_sms(word, 8, 1, 14)
@@ -184,7 +184,7 @@ impl TryFrom<u16> for Instruction {
                 0b000 => todo!("slli"),
                 0b001 => todo!("fldsp"),
                 0b010 => todo!("lwsp"),
-                0b011 => Ok(Instruction::I {
+                0b011 => Ok(Self::I {
                     imm: u32::from(
                         u16_sms(word, 2, 3, 6)
                             | u16_sms(word, 12, 1, 5)
@@ -199,14 +199,14 @@ impl TryFrom<u16> for Instruction {
                     let rs2 = RegisterName::compressed_rs2(word);
                     if u16_sms(word, 12, 1, 0) == 0 {
                         if rs2 == RegisterName::X0 {
-                            Instruction::I {
+                            Self::I {
                                 imm: 0,
                                 rs1: rd,
                                 funct: IFunct::Jalr,
                                 rd: RegisterName::X0,
                             }
                         } else {
-                            Instruction::R {
+                            Self::R {
                                 funct: RFunct::Add,
                                 rs2,
                                 rs1: RegisterName::X0,
@@ -219,7 +219,7 @@ impl TryFrom<u16> for Instruction {
                 }),
                 0b101 => todo!("fsdsp"),
                 0b110 => todo!("swsp"),
-                0b111 => Ok(Instruction::S {
+                0b111 => Ok(Self::S {
                     imm: u16_sms(word, 7, 3, 6) | u16_sms(word, 10, 3, 3),
                     rs2: RegisterName::compressed_rs2(word),
                     rs1: RegisterName::X2,
