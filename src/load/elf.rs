@@ -15,9 +15,6 @@ pub fn load_elf_file(file: elf::File) -> (Vec<u8>, *const u16) {
         .filter(|section| section.shdr.addr != 0)
         .map(|section| section.shdr.addr - address_offset + section.shdr.size)
         .max()
-        // The default value here doesn't matter since it only gets used if
-        // there are no sections, which will trigger an error later in this
-        // function anyway
         .unwrap_or_default() as usize;
     let mut bytes = vec![0u8; total_size];
 
