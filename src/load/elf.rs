@@ -1,4 +1,4 @@
-pub fn load_elf_file(file: elf::File) -> (Vec<u8>, *const u16) {
+pub fn load_elf_file(file: &elf::File) -> (Vec<u8>, *const u16) {
     // Sections with an address of zero should not be loaded
     let relevant_sections = || {
         file.sections

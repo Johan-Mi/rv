@@ -15,7 +15,7 @@ pub fn load_program(
     {
         file.rewind()?;
         Ok(elf::load_elf_file(
-            ::elf::File::open_stream(&mut file).unwrap(),
+            &::elf::File::open_stream(&mut file).unwrap(),
         ))
     } else {
         // Not an ELF; treat it as a flat binary
