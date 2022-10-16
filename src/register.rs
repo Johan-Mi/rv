@@ -28,6 +28,14 @@ impl RegisterName {
     pub const fn compressed_rs2(word: u16) -> Self {
         Self(u16_sms(word, 2, 5, 0) as u8)
     }
+
+    pub const fn compressed_common_rs1(word: u16) -> Self {
+        Self(u16_sms(word, 7, 3, 0) as u8 + 8)
+    }
+
+    pub const fn compressed_common_rs2(word: u16) -> Self {
+        Self(u16_sms(word, 2, 3, 0) as u8 + 8)
+    }
 }
 
 impl fmt::Debug for RegisterName {

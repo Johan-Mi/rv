@@ -123,8 +123,20 @@ impl TryFrom<u16> for Instruction {
                 0b011 => todo!("ld"),
                 0b100 => unknown_instruction,
                 0b101 => todo!("fsd"),
-                0b110 => todo!("sw"),
-                0b111 => todo!("sd"),
+                0b110 => Ok(Self::S {
+                    funct: SFunct::Sw,
+                    rs2: RegisterName::compressed_common_rs2(word),
+                    rs1: RegisterName::compressed_common_rs1(word),
+                    imm: u16_sms(word, 5, 1, 6)
+                        | u16_sms(word, 10, 3, 3)
+                        | u16_sms(word, 6, 1, 2),
+                }),
+                0b111 => Ok(Self::S {
+                    funct: SFunct::Sd,
+                    rs2: RegisterName::compressed_common_rs2(word),
+                    rs1: RegisterName::compressed_common_rs1(word),
+                    imm: u16_sms(word, 5, 2, 6) | u16_sms(word, 10, 3, 3),
+                }),
                 _ => unreachable!(),
             },
             0b01 => match funct3 {
