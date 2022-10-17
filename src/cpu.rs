@@ -112,9 +112,12 @@ impl Cpu {
                     IFunct::Xori => self[rd] = rs1 ^ imm_i32.sign_extend(),
                     IFunct::Ori => self[rd] = rs1 | imm_i32.sign_extend(),
                     IFunct::Andi => self[rd] = rs1 & imm_i32.sign_extend(),
-                    IFunct::Slli => todo!(),
-                    IFunct::Srli => todo!(),
-                    IFunct::Srai => todo!(),
+                    IFunct::Slli => self[rd] = rs1.wrapping_shl(imm_i32 as u32),
+                    IFunct::Srli => self[rd] = rs1.wrapping_shr(imm_i32 as u32),
+                    IFunct::Srai => {
+                        self[rd] =
+                            (rs1 as i64).wrapping_shr(imm_i32 as u32) as u64
+                    }
                     IFunct::Lb => {
                         self[rd] = i64::from(unsafe {
                             *(rs1.wrapping_add_signed(i64::from(imm_i32))
