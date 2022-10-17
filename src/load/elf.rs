@@ -1,4 +1,8 @@
-pub fn load_elf_file(file: &elf::File) -> (Vec<u8>, *const u16) {
+use std::io::Cursor;
+
+pub fn load_elf_file(raw_file: &[u8]) -> (Vec<u8>, *const u16) {
+    let file = elf::File::open_stream(&mut Cursor::new(raw_file)).unwrap();
+
     // Sections with an address of zero should not be loaded
     let relevant_sections = || {
         file.sections
