@@ -21,7 +21,7 @@ pub fn load_elf_file(raw_file: &[u8]) -> (Vec<u8>, *const u16) {
         .unwrap_or_default() as usize;
     let mut bytes = vec![0u8; total_size];
 
-    for segment in file.phdrs.iter() {
+    for segment in &file.phdrs {
         match segment.progtype {
             PT_LOAD => {
                 bytes[(segment.vaddr - address_offset) as usize..]
