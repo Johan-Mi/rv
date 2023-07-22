@@ -116,7 +116,7 @@ impl Cpu {
                     IFunct::Srli => self[rd] = rs1.wrapping_shr(imm_i32 as u32),
                     IFunct::Srai => {
                         self[rd] =
-                            (rs1 as i64).wrapping_shr(imm_i32 as u32) as u64
+                            (rs1 as i64).wrapping_shr(imm_i32 as u32) as u64;
                     }
                     IFunct::Lb => {
                         self[rd] = i64::from(unsafe {
