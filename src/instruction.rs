@@ -188,8 +188,28 @@ impl TryFrom<u16> for Instruction {
                     ) >> 4,
                     rd: RegisterName::X0,
                 }),
-                0b110 => todo!("beqz"),
-                0b111 => todo!("bnez"),
+                0b110 => Ok(Self::B {
+                    funct: BFunct::Beq,
+                    rs2: RegisterName::compressed_common_rs1(word),
+                    rs1: RegisterName::X0,
+                    imm: (u16_sms(word, 2, 1, 5)
+                        | u16_sms(word, 3, 2, 1)
+                        | u16_sms(word, 5, 2, 6)
+                        | u16_sms(word, 10, 2, 3)
+                        | u16_sms(word, 12, 1, 8))
+                        as i16,
+                }),
+                0b111 => Ok(Self::B {
+                    funct: BFunct::Bne,
+                    rs2: RegisterName::compressed_common_rs1(word),
+                    rs1: RegisterName::X0,
+                    imm: (u16_sms(word, 2, 1, 5)
+                        | u16_sms(word, 3, 2, 1)
+                        | u16_sms(word, 5, 2, 6)
+                        | u16_sms(word, 10, 2, 3)
+                        | u16_sms(word, 12, 1, 8))
+                        as i16,
+                }),
                 _ => unreachable!(),
             },
             0b10 => match funct3 {
